@@ -19,9 +19,19 @@ RUN CGO_ENABLED=0 DISABLE_DOCS=1 make BUILDTAGS=containers_image_openpgp GO_DYN_
   ./bin/skopeo --version
 
 
+FROM skopeo-build AS skopeo-build-tagged
+
+RUN mv -f ./bin/skopeo "$(eval "$(go tool dist env)" && echo "./bin/skopeo-v${SKOPEO_VERSION}.${GOOS}-${GOARCH}")"
+
+
 FROM scratch AS skopeo-bin
 
-COPY --from=skopeo-build /usr/src/skopeo/bin/skopeo /
+COPY --from=skopeo-build /usr/src/skopeo/bin /
+
+
+FROM scratch AS skopeo-bin-tagged
+
+COPY --from=skopeo-build-tagged /usr/src/skopeo/bin /
 
 
 FROM buildpack-deps:focal-curl AS test
