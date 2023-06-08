@@ -32,7 +32,7 @@ You can download the static binary from the [GitHub Releases](https://github.com
 version="1.12.0"
 
 # download the static binary
-sudo curl -L --output /usr/local/bin/skopeo https://github.com/felipecrs/skopeo-bin/releases/download/v${version}/skopeo-v${version}.linux-amd64
+sudo curl -L --output /usr/local/bin/skopeo https://github.com/felipecrs/skopeo-bin/releases/download/v${version}/skopeo.linux-amd64
 
 # make it executable
 sudo chmod +x /usr/local/bin/skopeo

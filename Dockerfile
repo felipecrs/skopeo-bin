@@ -2,6 +2,8 @@ ARG SKOPEO_VERSION="1.12.0"
 # The go version should match the go version in skopeo's go.mod
 ARG GO_VERSION="1.18"
 
+
+# Build skopeo from source
 FROM golang:${GO_VERSION} AS build
 
 SHELL [ "/bin/bash", "-euxo", "pipefail", "-c" ]
@@ -26,7 +28,7 @@ RUN CGO_ENABLED=0 DISABLE_DOCS=1 make BUILDTAGS=containers_image_openpgp GO_DYN_
 FROM build AS build-tagged
 
 ARG SKOPEO_VERSION
-RUN tagged_binary="$(eval "$(go tool dist env)" && echo "skopeo-v${SKOPEO_VERSION}.${GOOS}-${GOARCH}")"; \
+RUN tagged_binary="$(eval "$(go tool dist env)" && echo "skopeo.${GOOS}-${GOARCH}")"; \
   mv -f ./bin/skopeo "./bin/${tagged_binary}"
 
 
@@ -34,6 +36,7 @@ RUN tagged_binary="$(eval "$(go tool dist env)" && echo "skopeo-v${SKOPEO_VERSIO
 FROM scratch AS bin
 
 COPY --from=build /workspace/bin/skopeo /
+
 
 # Adds only the tagged binary to the scratch image
 FROM scratch AS bin-tagged
