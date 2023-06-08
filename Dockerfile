@@ -12,7 +12,8 @@ RUN curl -fsSL "https://github.com/containers/skopeo/archive/v${SKOPEO_VERSION}.
   | tar -xzf - --strip-components=1
 
 # Bundle default-policy.json into the binary
-RUN curl -fsSL https://github.com/felipecrs/skopeo/commit/c37fdf45d00b402b5aa9a1a10e3ac7157d2466a5.diff | git apply
+# https://github.com/containers/skopeo/pull/2014
+RUN curl -fsSL https://github.com/containers/skopeo/pull/2014.diff | git apply
 
 # https://github.com/containers/skopeo/blob/main/install.md#building-a-static-binary
 RUN CGO_ENABLED=0 DISABLE_DOCS=1 make BUILDTAGS=containers_image_openpgp GO_DYN_FLAGS=; \
