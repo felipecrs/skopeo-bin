@@ -47,3 +47,15 @@ FROM ubuntu:20.04
 
 COPY --from=ghcr.io/felipecrs/skopeo-bin:1.12.0 / /usr/local/bin/
 ```
+
+## Building skopeo-bin
+
+It should be as simple as:
+
+```bash
+# Build and output the static binary to the current directory
+docker build https://github.com/felipecrs/skopeo-bin.git --output .
+
+# Check if it works
+./skopeo --version
+```
