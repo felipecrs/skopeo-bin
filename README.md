@@ -59,3 +59,19 @@ docker build https://github.com/felipecrs/skopeo-bin.git --output .
 # Check if it works
 ./skopeo --version
 ```
+
+## Releasing
+
+As the release process is not automated yet, you can follow these steps to release a new version:
+
+```bash
+version="1.12.0"
+
+rm -rf ./binaries
+
+docker build . --build-arg "SKOPEO_VERSION=${version}" --target bin-tagged --output ./binaries
+
+gh release delete v${version} --cleanup-tag --yes
+
+gh release create --title "v${version}" --target main "v${version}" ./binaries/*
+```

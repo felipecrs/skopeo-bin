@@ -41,7 +41,7 @@ COPY --from=build /workspace/bin/skopeo /
 # Adds only the tagged binary to the scratch image
 FROM scratch AS bin-tagged
 
-COPY --from=build-tagged /workspace/bin/skopeo-* /
+COPY --from=build-tagged /workspace/bin/skopeo.* /
 
 
 # A testing stage that checks if the binary is working
