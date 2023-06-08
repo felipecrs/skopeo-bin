@@ -1,46 +1,54 @@
+ARG SKOPEO_VERSION="1.12.0"
+# The go version should match the go version in skopeo's go.mod
 ARG GO_VERSION="1.18"
 
-
-FROM golang:${GO_VERSION} AS skopeo-build
+FROM golang:${GO_VERSION} AS build
 
 SHELL [ "/bin/bash", "-euxo", "pipefail", "-c" ]
 
-WORKDIR /usr/src/skopeo
+WORKDIR /workspace
 
-ARG SKOPEO_VERSION="1.12.0"
+ARG SKOPEO_VERSION
 RUN curl -fsSL "https://github.com/containers/skopeo/archive/v${SKOPEO_VERSION}.tar.gz" \
   | tar -xzf - --strip-components=1
 
-# Bundle default-policy.json into the binary
+# Bundle default-policy.json into the binary to provide a working out-of-the-box experience
 # https://github.com/containers/skopeo/pull/2014
 RUN curl -fsSL https://github.com/containers/skopeo/pull/2014.diff | git apply
 
 # https://github.com/containers/skopeo/blob/main/install.md#building-a-static-binary
 RUN CGO_ENABLED=0 DISABLE_DOCS=1 make BUILDTAGS=containers_image_openpgp GO_DYN_FLAGS=; \
+  # Check if the binary is working \
   ./bin/skopeo --version
 
 
-FROM skopeo-build AS skopeo-build-tagged
+# This stage renames the binary to include the version and the GOOS/GOARCH
+FROM build AS build-tagged
 
-RUN mv -f ./bin/skopeo "$(eval "$(go tool dist env)" && echo "./bin/skopeo-v${SKOPEO_VERSION}.${GOOS}-${GOARCH}")"
-
-
-FROM scratch AS skopeo-bin
-
-COPY --from=skopeo-build /usr/src/skopeo/bin /
+ARG SKOPEO_VERSION
+RUN tagged_binary="$(eval "$(go tool dist env)" && echo "skopeo-v${SKOPEO_VERSION}.${GOOS}-${GOARCH}")"; \
+  mv -f ./bin/skopeo "./bin/${tagged_binary}"
 
 
-FROM scratch AS skopeo-bin-tagged
+# Adds only the binary to the scratch image
+FROM scratch AS bin
 
-COPY --from=skopeo-build-tagged /usr/src/skopeo/bin /
+COPY --from=build /workspace/bin/skopeo /
+
+# Adds only the tagged binary to the scratch image
+FROM scratch AS bin-tagged
+
+COPY --from=build-tagged /workspace/bin/skopeo-* /
 
 
+# A testing stage that checks if the binary is working
 FROM buildpack-deps:focal-curl AS test
 
-COPY --from=skopeo-bin / /usr/local/bin/
+COPY --from=bin / /usr/local/bin/
 
-CMD ["skopeo", "copy", "docker://alpine:latest", "docker-archive:alpine.tar"]
+RUN skopeo copy docker://hello-world docker-archive:hello-world.tar; \
+  rm -f hello-world.tar
 
 
-# Set skopeo-bin as the default stage
-FROM skopeo-bin
+# Set the scratch bin as the default stage
+FROM bin
