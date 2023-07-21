@@ -29,7 +29,7 @@ You can download the static binary from the [GitHub Releases](https://github.com
 
 ```bash
 # pick any version you want from the releases page
-version="1.13.0"
+version="1.13.1"
 
 # download the static binary
 sudo curl -L --output /usr/local/bin/skopeo https://github.com/felipecrs/skopeo-bin/releases/download/v${version}/skopeo.linux-amd64
@@ -45,7 +45,7 @@ If you want to bundle skopeo in a docker image, you have an [easier way](https:/
 ```Dockerfile
 FROM ubuntu:20.04
 
-COPY --from=ghcr.io/felipecrs/skopeo-bin:1.13.0 / /usr/local/bin/
+COPY --from=ghcr.io/felipecrs/skopeo-bin:1.13.1 / /usr/local/bin/
 ```
 
 ## Building skopeo-bin
@@ -62,16 +62,8 @@ docker build https://github.com/felipecrs/skopeo-bin.git --output .
 
 ## Releasing
 
-As the release process is not automated yet, you can follow these steps to release a new version:
+As the release process is not automated yet, you can run the following command to release a new version:
 
-```bash
-version="1.13.0"
-
-rm -rf ./binaries
-
-docker build . --build-arg "SKOPEO_VERSION=${version}" --target bin-tagged --output ./binaries
-
-gh release delete v${version} --cleanup-tag --yes
-
-gh release create --title "v${version}" --target main "v${version}" ./binaries/*
+```console
+scripts/build_and_release.sh 1.13.1
 ```
