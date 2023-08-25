@@ -67,3 +67,5 @@ As the release process is not automated yet, you can run the following command t
 ```console
 scripts/build_and_release.sh 1.13.1
 ```
+
+If no version is provided, the latest version of skopeo will be assumed.
