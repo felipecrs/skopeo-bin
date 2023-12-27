@@ -1,4 +1,4 @@
-ARG SKOPEO_VERSION="1.13.1"
+ARG SKOPEO_VERSION="1.14.0"
 # The go version should match the go version in skopeo's go.mod
 ARG GO_VERSION="1.18"
 
