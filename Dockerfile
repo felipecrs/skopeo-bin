@@ -1,6 +1,6 @@
-ARG SKOPEO_VERSION="1.14.0"
+ARG SKOPEO_VERSION="1.15.0"
 # The go version should match the go version in skopeo's go.mod
-ARG GO_VERSION="1.18"
+ARG GO_VERSION="1.20"
 
 
 # Build skopeo from source
@@ -21,7 +21,10 @@ RUN curl -fsSL https://github.com/containers/skopeo/pull/2014.diff | git apply
 # https://github.com/containers/skopeo/blob/main/install.md#building-a-static-binary
 RUN CGO_ENABLED=0 DISABLE_DOCS=1 make BUILDTAGS=containers_image_openpgp GO_DYN_FLAGS=; \
   # Check if the binary is working \
-  ./bin/skopeo --version
+  ./bin/skopeo --version | tee /dev/stderr \
+    | grep -q -w "${SKOPEO_VERSION}"; \
+  ./bin/skopeo inspect docker://hello-world | tee /dev/stderr | \
+    grep -q -w 'docker.io/library/hello-world'
 
 
 # This stage renames the binary to include the version and the GOOS/GOARCH
