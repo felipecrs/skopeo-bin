@@ -13,7 +13,7 @@ fi
 readonly git_tag="v${version}"
 
 # Find go version
-if [[ "${version}" == "1.15.0" ]]; then
+if [[ "${version}" == "1.15."* ]]; then
     # https://github.com/containers/skopeo/pull/2252
     go_version="1.20"
 else
@@ -28,12 +28,22 @@ echo "Building skopeo ${version} with go ${go_version}"
 
 rm -rf ./binaries
 
-docker build . \
-    --pull \
-    --build-arg "SKOPEO_VERSION=${version}" \
-    --build-arg "GO_VERSION=${go_version}" \
-    --target bin-tagged \
-    --output ./binaries
+docker run --privileged --rm --pull=always tonistiigi/binfmt --install arm64
+
+export BUILDX_BUILDER="skopeo-bin"
+
+docker buildx create --name "${BUILDX_BUILDER}"
+trap 'docker buildx rm --force "${BUILDX_BUILDER}"' EXIT
+
+for platform in "linux/amd64" "linux/arm64"; do
+    docker buildx build . \
+        --pull \
+        --platform "${platform}" \
+        --build-arg "SKOPEO_VERSION=${version}" \
+        --build-arg "GO_VERSION=${go_version}" \
+        --target bin-tagged \
+        --output ./binaries
+done
 
 # Delete the release if it already exists
 if gh release view "${git_tag}" &>/dev/null; then
@@ -54,6 +64,7 @@ gh release create "${git_tag}" --title "${git_tag}" --target main --latest="${la
     binaries/*
 
 docker build . \
+    --platform linux/amd64,linux/arm64 \
     --build-arg "SKOPEO_VERSION=${version}" \
     --build-arg "GO_VERSION=${go_version}" \
     --tag "ghcr.io/felipecrs/skopeo-bin:${version}" \
