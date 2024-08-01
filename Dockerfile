@@ -31,7 +31,7 @@ RUN CGO_ENABLED=0 DISABLE_DOCS=1 make BUILDTAGS=containers_image_openpgp GO_DYN_
 FROM build AS build-tagged
 
 ARG SKOPEO_VERSION
-RUN tagged_binary="$(eval "$(go tool dist env)" && echo "skopeo.${GOOS}-${GOARCH}")"; \
+RUN tagged_binary="skopeo.$(go env GOOS)-$(go env GOARCH)"; \
   mv -f ./bin/skopeo "./bin/${tagged_binary}"
 
 
