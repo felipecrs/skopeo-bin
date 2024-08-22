@@ -19,7 +19,7 @@ if [[ "${version}" == "1.15."* ]]; then
 else
     go_version=$(
         curl -fsSL "https://github.com/containers/skopeo/raw/${git_tag}/go.mod" |
-            grep --extended-regexp '^go [0-9]+\.[0-9]+' |
+            grep --extended-regexp --only-matching '^go [0-9]+\.[0-9]+' |
             awk '{print $2}'
     )
 fi
