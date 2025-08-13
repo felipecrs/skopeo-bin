@@ -1,6 +1,6 @@
-ARG SKOPEO_VERSION="1.15.0"
+ARG SKOPEO_VERSION="1.20.0"
 # The go version should match the go version in skopeo's go.mod
-ARG GO_VERSION="1.20"
+ARG GO_VERSION="1.23.3"
 
 
 # Build skopeo from source
@@ -16,15 +16,19 @@ RUN curl -fsSL "https://github.com/containers/skopeo/archive/v${SKOPEO_VERSION}.
 
 # Bundle default-policy.json into the binary to provide a working out-of-the-box experience
 # https://github.com/containers/skopeo/pull/2014
-RUN curl -fsSL https://github.com/containers/skopeo/pull/2014.diff | git apply
+COPY patches/embed-policy.patch /tmp/
+RUN git apply /tmp/embed-policy.patch
 
 # https://github.com/containers/skopeo/blob/main/install.md#building-a-static-binary
-RUN CGO_ENABLED=0 DISABLE_DOCS=1 make BUILDTAGS=containers_image_openpgp GO_DYN_FLAGS=; \
-  # Check if the binary is working \
+RUN CGO_ENABLED=0 DISABLE_DOCS=1 make BUILDTAGS=containers_image_openpgp GO_DYN_FLAGS=
+
+# Check if the binary is working
+RUN \
   ./bin/skopeo --version | tee /dev/stderr \
     | grep -q -w "${SKOPEO_VERSION}"; \
-  ./bin/skopeo inspect docker://hello-world | tee /dev/stderr | \
-    grep -q -w 'docker.io/library/hello-world'
+  ./bin/skopeo copy docker://hello-world docker-archive:/tmp/hello-world.tar:example.com/hello-world; \
+  ./bin/skopeo list-tags docker-archive:/tmp/hello-world.tar | tee /dev/stderr \
+    | grep -q -w 'example.com/hello-world'
 
 
 # This stage renames the binary to include the version and the GOOS/GOARCH
