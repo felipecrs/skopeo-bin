@@ -59,7 +59,7 @@ else
     latest=false
 fi
 
-gh release create "${git_tag}" --title "${git_tag}" --target main --latest="${latest}" \
+gh release create "${git_tag}" --title "${git_tag}" --target master --latest="${latest}" \
     --notes "The original release notes can be found [here](https://github.com/containers/skopeo/releases/tag/${git_tag})." \
     binaries/*
 
